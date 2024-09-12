@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Detail Management System</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f3ec78, #af4261);
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 60px;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        h2 {
+            color: #af4261;
+            margin-bottom: 40px;
+        }
+        input, button {
+            margin: 15px 0;
+            padding: 12px;
+            width: calc(100% - 24px);
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        input:focus {
+            border-color: #af4261;
+            box-shadow: 0 0 8px rgba(175, 66, 97, 0.5);
+        }
+        button {
+            background: #af4261;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        button:hover {
+            background: #f3ec78;
+            color: #af4261;
+            border: 1px solid #af4261;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+            display: none;
+            background: #f9f9f9;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #af4261;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        @media (max-width: 600px) {
+            input, button {
+                width: calc(100% - 24px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Employee Detail Management System</h2>
+    
+    <input type="text" id="name" placeholder="Employee Name" required>
+    <input type="number" id="emp_id" placeholder="Employee ID" required>
+    <input type="text" id="department" placeholder="Department" required>
+    <input type="number" id="salary" placeholder="Salary" step="0.01" required>
+    <button onclick="addEmployee()">Add Employee</button>
+
+    <input type="number" id="search_emp_id" placeholder="Enter Employee ID to Search">
+    <button onclick="searchEmployee()">Search Employee</button>
+    
+    <input type="number" id="delete_emp_id" placeholder="Enter Employee ID to Delete">
+    <button onclick="deleteEmployee()">Delete Employee</button>
+    
+    <button onclick="displayEmployees()">Display Employees</button>
+
+    <table id="employeeTable">
+        <thead>
+            <tr>
+                <th>Employee ID</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Salary</th>
+            </tr>
+        </thead>
+        <tbody id="employeeData"></tbody>
+    </table>
+</div>
+
+<script>
+    class Node {
+        constructor(emp_id, name, department, salary) {
+            this.emp_id = emp_id;
+            this.name = name;
+            this.department = department;
+            this.salary = salary;
+            this.next = null;
+        }
+    }
+
+    class LinkedList {
+        constructor() {
+            this.head = null;
+        }
+
+        addEmployee(emp_id, name, department, salary) {
+            const newNode = new Node(emp_id, name, department, salary);
+            if (!this.head || this.head.emp_id > emp_id) {
+                newNode.next = this.head;
+                this.head = newNode;
+            } else {
+                let current = this.head;
+                while (current.next && current.next.emp_id < emp_id) {
+                    current = current.next;
+                }
+                newNode.next = current.next;
+                current.next = newNode;
+            }
+        }
+
+        deleteEmployee(emp_id) {
+            if (!this.head) return false;
+
+            if (this.head.emp_id === emp_id) {
+                this.head = this.head.next;
+                return true;
+            }
+
+            let current = this.head;
+            while (current.next && current.next.emp_id !== emp_id) {
+                current = current.next;
+            }
+
+            if (current.next && current.next.emp_id === emp_id) {
+                current.next = current.next.next;
+                return true;
+            }
+
+            return false;
+        }
+
+        searchEmployee(emp_id) {
+            let current = this.head;
+            while (current) {
+                if (current.emp_id === emp_id) return current;
+                current = current.next;
+            }
+            return null;
+        }
+
+        displayEmployees() {
+            const employeeData = document.getElementById("employeeData");
+            const employeeTable = document.getElementById("employeeTable");
+            employeeData.innerHTML = "";
+
+            let current = this.head;
+            while (current) {
+                const row = `<tr>
+                    <td>${current.emp_id}</td>
+                    <td>${current.name}</td>
+                    <td>${current.department}</td>
+                    <td>${current.salary.toFixed(2)}</td>
+                </tr>`;
+                employeeData.innerHTML += row;
+                current = current.next;
+            }
+
+            employeeTable.style.display = "table";
+        }
+    }
+
+    const employeeList = new LinkedList();
+
+    function addEmployee() {
+        const name = document.getElementById("name").value;
+        const emp_id = parseInt(document.getElementById("emp_id").value);
+        const department = document.getElementById("department").value;
+        const salary = parseFloat(document.getElementById("salary").value);
+
+        if (!name || !emp_id || !department || !salary) {
+            alert("Please fill in all fields");
+            return;
+        }
+
+        const existingEmployee = employeeList.searchEmployee(emp_id);
+        if (existingEmployee) {
+            alert("Employee record already exists.");
+            return;
+        }
+
+        employeeList.addEmployee(emp_id, name, department, salary);
+        clearInputs();
+    }
+
+    function deleteEmployee() {
+        const emp_id = parseInt(document.getElementById("delete_emp_id").value);
+
+        if (employeeList.deleteEmployee(emp_id)) {
+            displayEmployees();
+        } else {
+            alert("Employee record not found.");
+        }
+
+        document.getElementById("delete_emp_id").value = "";
+    }
+
+    function searchEmployee() {
+        const emp_id = parseInt(document.getElementById("search_emp_id").value);
+        const employee = employeeList.searchEmployee(emp_id);
+
+        if (employee) {
+            alert(`Employee found:\nName: ${employee.name}\nDepartment: ${employee.department}\nSalary: ${employee.salary}`);
+        } else {
+            alert("Employee not found.");
+        }
+
+        document.getElementById("search_emp_id").value = "";
+    }
+
+    function displayEmployees() {
+        employeeList.displayEmployees();
+    }
+
+    function clearInputs() {
+        document.getElementById("name").value = "";
+        document.getElementById("emp_id").value = "";
+        document.getElementById("department").value = "";
+        document.getElementById("salary").value = "";
+    }
+</script>
+
+</body>
+</html>
